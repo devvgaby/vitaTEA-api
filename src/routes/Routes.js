@@ -3,7 +3,7 @@ const router = Router();
 
 const cuidadoresRouter = require('./cuidadorRoutes');
 const monitoradosRouter = require('./monitoradoRoutes');
-const contatosEmergenciaRouter = require('./contatoEmergencia');
+const contatosEmergenciaRouter = require('./contatoEmergenciaRoutes');
 
 router.use('/cuidadores', cuidadoresRouter);
 router.use('/monitorados', monitoradosRouter);  
