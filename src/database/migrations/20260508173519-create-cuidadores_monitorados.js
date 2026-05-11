@@ -3,6 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+
     await queryInterface.createTable('cuidadores_monitorados', {
 
       id_cuidador: {
@@ -13,9 +14,6 @@ module.exports = {
           model: 'cuidadores',
           key: 'id_cuidador',
         },
-
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
 
       id_monitorado: {
@@ -26,9 +24,6 @@ module.exports = {
           model: 'monitorados',
           key: 'id_monitorado',
         },
-
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
 
       createdAt: {

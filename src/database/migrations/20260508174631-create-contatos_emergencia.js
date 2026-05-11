@@ -4,6 +4,7 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('contatos_emergencia', {
+
       id_contato_emergencia: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -17,8 +18,6 @@ module.exports = {
           model: 'monitorados',
           key: 'id_monitorado',
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
 
       nome: {
@@ -27,6 +26,11 @@ module.exports = {
       },
 
       telefone: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+
+      parentesco: {
         type: Sequelize.STRING,
         allowNull: false,
       },
