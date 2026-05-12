@@ -1,4 +1,9 @@
-const { CuidadorMonitorado } = require("../models");
+const {
+  criarCuidadorMonitorado,
+  listarCuidadoresMonitorados,
+  buscarCuidadorMonitoradoPorId,
+  deletarCuidadorMonitoradoPorId,
+} = require("../services/cuidadorMonitoradoService");
 
 const criar = async (req, res) => {
   try {
@@ -10,14 +15,13 @@ const criar = async (req, res) => {
       });
     }
 
-    const cuidadorMonitorado = await CuidadorMonitorado.create({
+    const cuidadorMonitorado = await criarCuidadorMonitorado(
       id_cuidador,
       id_monitorado,
-    });
+    );
 
     return res.status(201).json(cuidadorMonitorado);
-
-  } catch (error) {
+  } catch {
     return res.status(500).json({
       error: "Erro ao criar relacionamento",
     });
@@ -26,28 +30,46 @@ const criar = async (req, res) => {
 
 const listar = async (req, res) => {
   try {
-    const cuidadoresMonitorados = await CuidadorMonitorado.findAll();
+    const cuidadoresMonitorados = await listarCuidadoresMonitorados();
     return res.status(200).json(cuidadoresMonitorados);
-  } catch (error) {
+  } catch {
     return res.status(500).json({
       error: "Erro ao listar relacionamentos",
     });
   }
 };
 
-const remover = async (req, res) => {
+const buscarPorId = async (req, res) => {
   try {
-    const { id_cuidador, id_monitorado } = req.body;
+    const { id_cuidador, id_monitorado } = req.params;
 
-    if (!id_cuidador || !id_monitorado) {
-      return res.status(400).json({
-        error: "id_cuidador e id_monitorado são obrigatórios",
+    const cuidadorMonitorado = await buscarCuidadorMonitoradoPorId(
+      id_cuidador,
+      id_monitorado,
+    );
+
+    if (!cuidadorMonitorado) {
+      return res.status(404).json({
+        error: "Relacionamento não encontrado",
       });
     }
 
-    const deleted = await CuidadorMonitorado.destroy({
-      where: { id_cuidador, id_monitorado },
+    return res.status(200).json(cuidadorMonitorado);
+  } catch {
+    return res.status(500).json({
+      error: "Erro ao buscar relacionamento",
     });
+  }
+};
+
+const remover = async (req, res) => {
+  try {
+    const { id_cuidador, id_monitorado } = req.params;
+
+    const deleted = await deletarCuidadorMonitoradoPorId(
+      id_cuidador,
+      id_monitorado,
+    );
 
     if (!deleted) {
       return res.status(404).json({
@@ -56,8 +78,7 @@ const remover = async (req, res) => {
     }
 
     return res.status(204).send();
-
-  } catch (error) {
+  } catch {
     return res.status(500).json({
       error: "Erro ao remover relacionamento",
     });
@@ -67,5 +88,6 @@ const remover = async (req, res) => {
 module.exports = {
   criar,
   listar,
+  buscarPorId,
   remover,
 };
