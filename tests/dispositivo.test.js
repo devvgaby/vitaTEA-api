@@ -21,9 +21,7 @@ describe("Dispositivo", () => {
     expect(res.data).toHaveProperty("id_dispositivo");
     expect(res.data.codigo).toContain("DISP-");
 
-    expect(res.data.id_monitorado).toBe(
-      monitorado.data.id_monitorado
-    );
+    expect(res.data.id_monitorado).toBe(monitorado.data.id_monitorado);
   });
 
   test("GET /dispositivos/:id - Buscar dispositivo", async () => {
@@ -39,18 +37,43 @@ describe("Dispositivo", () => {
     });
 
     const res = await axios.get(
-      `${api}/dispositivos/${dispositivo.data.id_dispositivo}`
+      `${api}/dispositivos/${dispositivo.data.id_dispositivo}`,
     );
 
     expect(res.status).toBe(200);
 
-    expect(res.data.id_dispositivo).toBe(
-      dispositivo.data.id_dispositivo
+    expect(res.data.id_dispositivo).toBe(dispositivo.data.id_dispositivo);
+
+    expect(res.data.codigo).toBe(dispositivo.data.codigo);
+  });
+
+  test("GET /dispositivos - Listar dispositivos", async () => {
+    const res = await axios.get(`${api}/dispositivos`);
+
+    expect(res.status).toBe(200);
+
+    expect(Array.isArray(res.data)).toBe(true);
+  });
+
+  test("GET /dispositivos/:id_dispositivo/id_monitorado - Buscar dispositivo por monitorado", async () => {
+    const monitorado = await axios.post(`${api}/monitorados`, {
+      nome: `Monitorado Disp ${Date.now()}`,
+      idade: 8,
+      nivel_tea: "2",
+    });
+
+    const dispositivo = await axios.post(`${api}/dispositivos`, {
+      codigo: `DISP-${Date.now()}`,
+      id_monitorado: monitorado.data.id_monitorado,
+    });
+
+    const res = await axios.get(
+      `${api}/dispositivos/${dispositivo.data.id_dispositivo}/${monitorado.data.id_monitorado}`,
     );
 
-    expect(res.data.codigo).toBe(
-      dispositivo.data.codigo
-    );
+    expect(res.status).toBe(200);
+    expect(res.data.id_dispositivo).toBe(dispositivo.data.id_dispositivo);
+    expect(res.data.id_monitorado).toBe(monitorado.data.id_monitorado);
   });
 
   test("PUT /dispositivos/:id - Atualizar dispositivo", async () => {
@@ -71,7 +94,7 @@ describe("Dispositivo", () => {
       `${api}/dispositivos/${dispositivo.data.id_dispositivo}`,
       {
         codigo: novoCodigo,
-      }
+      },
     );
 
     expect(res.status).toBe(200);
@@ -92,7 +115,7 @@ describe("Dispositivo", () => {
     });
 
     const res = await axios.delete(
-      `${api}/dispositivos/${dispositivo.data.id_dispositivo}`
+      `${api}/dispositivos/${dispositivo.data.id_dispositivo}`,
     );
 
     expect(res.status).toBe(204);
