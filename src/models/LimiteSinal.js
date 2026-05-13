@@ -28,3 +28,5 @@ const LimiteSinal = sequelize.define("LimiteSinal", {
     timestamps: true,
     paranoid: true,
 });
+
+module.exports = LimiteSinal;

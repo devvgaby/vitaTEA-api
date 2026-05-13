@@ -33,3 +33,5 @@
       paranoid: true,
     },
   );
+
+  module.exports = LeituraDispositivo;

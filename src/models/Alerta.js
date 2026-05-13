@@ -33,3 +33,5 @@ const Alerta = sequelize.define(
     paranoid: true,
   },
 );
+
+module.exports = Alerta;
