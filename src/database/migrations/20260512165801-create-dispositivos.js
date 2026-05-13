@@ -22,7 +22,7 @@ module.exports = {
       },
 
       codigo: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
         unique: true,
       },

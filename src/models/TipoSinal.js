@@ -9,8 +9,14 @@ const TipoSinal = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+
     nome: {
       type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    unidade_medida: {
+      type: DataTypes.STRING(20),
       allowNull: false,
     },
   },
@@ -18,6 +24,7 @@ const TipoSinal = sequelize.define(
     tableName: "tipos_sinais",
     timestamps: true,
     paranoid: true,
-  },
+  }
 );
+
 module.exports = TipoSinal;

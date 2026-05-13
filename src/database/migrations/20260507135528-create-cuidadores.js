@@ -11,18 +11,18 @@ module.exports = {
       },
 
       nome: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
 
       email: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
         unique: true,
       },
 
       senha: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
 

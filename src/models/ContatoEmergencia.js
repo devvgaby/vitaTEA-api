@@ -15,17 +15,17 @@ const ContatoEmergencia = sequelize.define(
       allowNull: false,
     },
     nome: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false,
     },
 
     telefone: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(20),
       allowNull: false,
     },
 
     parentesco: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(50),
       allowNull: false,
     },
   },

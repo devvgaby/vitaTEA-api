@@ -11,7 +11,7 @@ module.exports = {
       },
 
       nome: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
 

@@ -15,7 +15,7 @@ const Dispositivo = sequelize.define(
       unique: true,
     },
     codigo: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false,
       unique: true,
     },
