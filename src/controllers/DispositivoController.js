@@ -1,4 +1,11 @@
-const { Dispositivo } = require("../models");
+const {
+  criarDispositivo,
+  listarDispositivos,
+  buscarDispositivoPorMonitorado,
+  buscarDispositivoPorId,
+  atualizarDispositivoPorId,
+  deletarDispositivoPorId,
+} = require("../services/dispositivoService");
 
 const criar = async (req, res) => {
   const { codigo, id_monitorado } = req.body;
@@ -9,16 +16,16 @@ const criar = async (req, res) => {
     });
   }
 
-  const dispositivo = await Dispositivo.create({
+  const dispositivo = await criarDispositivo(
     codigo,
-    id_monitorado,
-  });
+    id_monitorado
+  );
 
   return res.status(201).json(dispositivo);
 };
 
 const listar = async (req, res) => {
-  const dispositivos = await Dispositivo.findAll();
+  const dispositivos = await listarDispositivos();
 
   return res.json(dispositivos);
 };
@@ -26,7 +33,7 @@ const listar = async (req, res) => {
 const buscarPorId = async (req, res) => {
   const { id } = req.params;
 
-  const dispositivo = await Dispositivo.findByPk(id);
+  const dispositivo = await buscarDispositivoPorId(id);
 
   if (!dispositivo) {
     return res.status(404).json({
@@ -40,12 +47,10 @@ const buscarPorId = async (req, res) => {
 const buscarPorMonitorado = async (req, res) => {
   const { id_dispositivo, id_monitorado } = req.params;
 
-  const dispositivo = await Dispositivo.findOne({
-    where: {
-      id_dispositivo,
-      id_monitorado,
-    },
-  });
+  const dispositivo = await buscarDispositivoPorMonitorado(
+    id_dispositivo,
+    id_monitorado
+  );
 
   if (!dispositivo) {
     return res.status(404).json({
@@ -60,23 +65,17 @@ const atualizar = async (req, res) => {
   const { id } = req.params;
   const { codigo, id_monitorado } = req.body;
 
-  const dispositivo = await Dispositivo.findByPk(id);
+  const dispositivo = await atualizarDispositivoPorId(
+    id,
+    codigo,
+    id_monitorado
+  );
 
   if (!dispositivo) {
     return res.status(404).json({
       error: "Dispositivo não encontrado",
     });
   }
-
-  if (codigo !== undefined) {
-    dispositivo.codigo = codigo;
-  }
-
-  if (id_monitorado !== undefined) {
-    dispositivo.id_monitorado = id_monitorado;
-  }
-
-  await dispositivo.save();
 
   return res.json(dispositivo);
 };
@@ -84,15 +83,14 @@ const atualizar = async (req, res) => {
 const deletar = async (req, res) => {
   const { id } = req.params;
 
-  const dispositivo = await Dispositivo.findByPk(id);
+  const dispositivo =
+    await deletarDispositivoPorId(id);
 
   if (!dispositivo) {
     return res.status(404).json({
       error: "Dispositivo não encontrado",
     });
   }
-
-  await dispositivo.destroy();
 
   return res.status(204).send();
 };
