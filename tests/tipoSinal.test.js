@@ -34,18 +34,14 @@ describe("TipoSinal", () => {
     });
 
     const res = await axios.get(
-      `${api}/tipos-sinais/${tipoSinal.data.id_tipo_sinal}`
+      `${api}/tipos-sinais/${tipoSinal.data.id_tipo_sinal}`,
     );
 
     expect(res.status).toBe(200);
 
-    expect(res.data.id_tipo_sinal).toBe(
-      tipoSinal.data.id_tipo_sinal
-    );
+    expect(res.data.id_tipo_sinal).toBe(tipoSinal.data.id_tipo_sinal);
 
-    expect(res.data.nome).toBe(
-      tipoSinal.data.nome
-    );
+    expect(res.data.nome).toBe(tipoSinal.data.nome);
 
     expect(res.data.unidade_medida).toBe("%");
   });
@@ -61,14 +57,12 @@ describe("TipoSinal", () => {
       {
         nome: "Temperatura Corporal",
         unidade_medida: "°C",
-      }
+      },
     );
 
     expect(res.status).toBe(200);
 
-    expect(res.data.nome).toBe(
-      "Temperatura Corporal"
-    );
+    expect(res.data.nome).toBe("Temperatura Corporal");
 
     expect(res.data.unidade_medida).toBe("°C");
   });
@@ -80,7 +74,7 @@ describe("TipoSinal", () => {
     });
 
     const res = await axios.delete(
-      `${api}/tipos-sinais/${tipoSinal.data.id_tipo_sinal}`
+      `${api}/tipos-sinais/${tipoSinal.data.id_tipo_sinal}`,
     );
 
     expect(res.status).toBe(204);
