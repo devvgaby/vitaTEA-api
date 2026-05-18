@@ -16,10 +16,7 @@ const criar = async (req, res) => {
     });
   }
 
-  const dispositivo = await criarDispositivo(
-    codigo,
-    id_monitorado
-  );
+  const dispositivo = await criarDispositivo(codigo, id_monitorado);
 
   return res.status(201).json(dispositivo);
 };
@@ -45,20 +42,22 @@ const buscarPorId = async (req, res) => {
 };
 
 const buscarPorMonitorado = async (req, res) => {
-  const { id_dispositivo, id_monitorado } = req.params;
+  const { id_limite_sinal, id_monitorado } = req.params;
 
-  const dispositivo = await buscarDispositivoPorMonitorado(
-    id_dispositivo,
-    id_monitorado
-  );
+  const limiteSinal = await LimiteSinal.findOne({
+    where: {
+      id_limite_sinal,
+      id_monitorado,
+    },
+  });
 
-  if (!dispositivo) {
+  if (!limiteSinal) {
     return res.status(404).json({
-      error: "Dispositivo não encontrado",
+      error: "Limite Sinal não encontrado",
     });
   }
 
-  return res.json(dispositivo);
+  return res.status(200).json(limiteSinal);
 };
 
 const atualizar = async (req, res) => {
@@ -68,7 +67,7 @@ const atualizar = async (req, res) => {
   const dispositivo = await atualizarDispositivoPorId(
     id,
     codigo,
-    id_monitorado
+    id_monitorado,
   );
 
   if (!dispositivo) {
@@ -83,8 +82,7 @@ const atualizar = async (req, res) => {
 const deletar = async (req, res) => {
   const { id } = req.params;
 
-  const dispositivo =
-    await deletarDispositivoPorId(id);
+  const dispositivo = await deletarDispositivoPorId(id);
 
   if (!dispositivo) {
     return res.status(404).json({

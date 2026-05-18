@@ -18,7 +18,7 @@ const criar = async (req, res) => {
 
     const cuidador = await criarCuidador(nome, email, senha);
 
-    return res.status(201).json(cuidador);
+    return res.status(201).json(cuidador);  
   } catch (error) {
     return res.status(500).json({
       error: "Erro ao criar cuidador",
