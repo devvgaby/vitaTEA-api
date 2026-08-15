@@ -1,4 +1,4 @@
-const JANELA_CONEXAO_MS = 2 * 60 * 1000; // 2 minutos
+const JANELA_CONEXAO_MS = 2 * 60 * 1000; 
 
 const LIMITES_PADRAO = {
   "Frequência Cardíaca": { valor_min: 60, valor_max: 120 },
