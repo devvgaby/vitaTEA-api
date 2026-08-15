@@ -8,11 +8,12 @@ const {
   atualizar,
   deletar,
 } = require("../controllers/TipoSinalController");
+const { autenticar } = require("../middlewares/authMiddleware");
 
-router.post("/", criar);
 router.get("/", listar);
 router.get("/:id", buscarPorId);
-router.put("/:id", atualizar);
-router.delete("/:id", deletar);
+router.post("/", autenticar, criar);
+router.put("/:id", autenticar, atualizar);
+router.delete("/:id", autenticar, deletar);
 
 module.exports = router;

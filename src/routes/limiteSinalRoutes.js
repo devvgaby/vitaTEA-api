@@ -9,6 +9,9 @@ const {
   atualizar,
   deletar,
 } = require("../controllers/LimiteSinalController");
+const { autenticar } = require("../middlewares/authMiddleware");
+
+router.use(autenticar);
 
 router.post("/", criar);
 router.get("/", listar);

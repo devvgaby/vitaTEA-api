@@ -7,6 +7,9 @@ const {
   buscarPorId,
   remover,
 } = require("../controllers/CuidadorMonitoradoController");
+const { autenticar } = require("../middlewares/authMiddleware");
+
+router.use(autenticar);
 
 router.post("/", criar);
 router.get("/", listar);

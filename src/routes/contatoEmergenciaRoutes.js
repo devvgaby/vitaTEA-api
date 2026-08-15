@@ -8,6 +8,9 @@ const {
     atualizar,
     deletar
 } = require("../controllers/ContatoEmergenciaController");
+const { autenticar } = require("../middlewares/authMiddleware");
+
+router.use(autenticar);
 
 router.post("/", criar);
 router.get("/", listar);
