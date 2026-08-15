@@ -36,6 +36,13 @@ module.exports = {
         defaultValue: Sequelize.NOW,
       },
 
+      // Indica se o cuidador já visualizou o alerta
+      visualizado: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

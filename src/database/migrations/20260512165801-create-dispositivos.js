@@ -27,6 +27,12 @@ module.exports = {
         unique: true,
       },
 
+      // Data e hora da última conexão do dispositivo
+      ultima_conexao: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
