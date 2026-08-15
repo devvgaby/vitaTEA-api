@@ -5,7 +5,7 @@ const {
   buscarLimiteSinalPorMonitorado,
   atualizarLimiteSinalPorId,
   deletarLimiteSinalPorId,
-} = require("../services/LimiteSinalService");
+} = require("../services/limiteSinalService");
 
 const criar = async (req, res) => {
   try {
