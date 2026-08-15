@@ -26,6 +26,11 @@ const Alerta = sequelize.define(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    visualizado: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   },
   {
     tableName: "alertas",

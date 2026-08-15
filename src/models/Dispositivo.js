@@ -19,6 +19,10 @@ const Dispositivo = sequelize.define(
       allowNull: false,
       unique: true,
     },
+    ultima_conexao: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "dispositivos",
