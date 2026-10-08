@@ -31,14 +31,9 @@ const login = async (email, senha) => {
   };
 };
 
-// RF18/RN14 — geração do token de redefinição de senha. Em produção, esse
-// token deve ser enviado por e-mail (ex.: via nodemailer) em vez de
-// retornado na resposta da API; aqui ele é o próprio retorno para permitir
-// testar o fluxo completo sem depender de um provedor de e-mail configurado.
 const solicitarRedefinicaoSenha = async (email) => {
   const cuidador = await Cuidador.findOne({ where: { email } });
 
-  // Não revela se o e-mail existe ou não (evita enumeração de usuários).
   if (!cuidador) return null;
 
   const resetToken = jwt.sign(
