@@ -9,7 +9,7 @@ const {
   deletar,
 } = require("../controllers/CuidadorController");
 const { autenticar } = require("../middlewares/authMiddleware");
-const { somenteProprioCuidador } = require("../middlewares/acessoMiddleware");
+const { somenteProprioCuidador } = require("../middlewares/middlewareAcess");
 
 router.post("/", criar);
 router.get("/", autenticar, listar);

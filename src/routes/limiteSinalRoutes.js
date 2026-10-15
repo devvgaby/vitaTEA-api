@@ -15,7 +15,7 @@ const {
   carregarAcessos,
   acessoPorLeitura,
   acessoPorDispositivo,
-} = require("../middlewares/acessoMiddleware");
+} = require("../middlewares/middlewareAcess");
 
 router.post("/", autenticarDispositivo, criar);
 

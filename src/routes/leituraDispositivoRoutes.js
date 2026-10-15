@@ -16,7 +16,7 @@ const {
   acessoPorMonitoradoCorpo,
   acessoPorMonitoradoParam,
   acessoPorDispositivo,
-} = require("../middlewares/acessoMiddleware");
+} = require("../middlewares/middlewareAcess");
 
 router.use(autenticar);
 

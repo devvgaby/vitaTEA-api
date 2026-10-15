@@ -9,7 +9,7 @@ const {
   deletar,
 } = require("../controllers/MonitoradoController");
 const { autenticar } = require("../middlewares/authMiddleware");
-const { carregarAcessos, acessoPorMonitoradoParam } = require("../middlewares/acessoMiddleware");
+const { carregarAcessos, acessoPorMonitoradoParam } = require("../middlewares/middlewareAcess");
 
 router.use(autenticar);
 

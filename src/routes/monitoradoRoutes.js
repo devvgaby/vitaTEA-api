@@ -15,7 +15,7 @@ const {
   acessoPorMonitoradoCorpo,
   acessoPorMonitoradoParam,
   acessoPorLimite,
-} = require("../middlewares/acessoMiddleware");
+} = require("../middlewares/middlewareAcess");
 
 router.use(autenticar);
 

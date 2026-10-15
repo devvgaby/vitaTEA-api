@@ -13,7 +13,7 @@ const {
   carregarAcessos,
   acessoPorMonitoradoCorpo,
   acessoPorContato,
-} = require("../middlewares/acessoMiddleware");
+} = require("../middlewares/middlewareAcess");
 
 router.use(autenticar);
 

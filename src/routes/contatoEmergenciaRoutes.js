@@ -8,7 +8,7 @@ const {
   deletar,
 } = require("../controllers/AlertaController");
 const { autenticar } = require("../middlewares/authMiddleware");
-const { acessoPorMonitoradoParam, acessoPorAlerta } = require("../middlewares/acessoMiddleware");
+const { acessoPorMonitoradoParam, acessoPorAlerta } = require("../middlewares/middlewareAcess");
 
 router.use(autenticar);
 
