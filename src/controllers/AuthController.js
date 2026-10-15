@@ -3,6 +3,9 @@ const {
   solicitarRedefinicaoSenha,
   redefinirSenha,
 } = require("../services/authService");
+const { enviarEmailRedefinicaoSenha, smtpConfigurado } = require("../services/emailService");
+
+const TAMANHO_MINIMO_SENHA = 6;
 
 const login = async (req, res) => {
   try {
@@ -32,16 +35,31 @@ const esqueciSenha = async (req, res) => {
       return res.status(400).json({ error: "E-mail é obrigatório" });
     }
 
-    const resetToken = await solicitarRedefinicaoSenha(email);
+    const resultado = await solicitarRedefinicaoSenha(email);
+
+    let resetToken;
+    if (resultado) {
+      try {
+        await enviarEmailRedefinicaoSenha({
+          para: resultado.cuidador.email,
+          nome: resultado.cuidador.nome,
+          resetToken: resultado.resetToken,
+        });
+      } catch (erro) {
+        console.error(`Falha ao enviar e-mail de redefinição: ${erro.message}`);
+      }
+
+      if (!smtpConfigurado() && process.env.NODE_ENV !== "production") {
+        resetToken = resultado.resetToken;
+      }
+    }
 
     return res.status(200).json({
-      message: "Se o e-mail existir, um link de redefinição foi enviado.",
-      resetToken: resetToken || undefined,
+      message: "Se o e-mail estiver cadastrado, enviamos as instruções de redefinição.",
+      resetToken,
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ error: "Erro ao solicitar redefinição de senha" });
+    return res.status(500).json({ error: "Erro ao solicitar redefinição de senha" });
   }
 };
 
@@ -50,9 +68,13 @@ const redefinirSenhaController = async (req, res) => {
     const { resetToken, novaSenha } = req.body;
 
     if (!resetToken || !novaSenha) {
+      return res.status(400).json({ error: "resetToken e novaSenha são obrigatórios" });
+    }
+
+    if (String(novaSenha).length < TAMANHO_MINIMO_SENHA) {
       return res
         .status(400)
-        .json({ error: "resetToken e novaSenha são obrigatórios" });
+        .json({ error: `A senha deve ter pelo menos ${TAMANHO_MINIMO_SENHA} caracteres` });
     }
 
     const sucesso = await redefinirSenha(resetToken, novaSenha);

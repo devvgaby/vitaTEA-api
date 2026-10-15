@@ -42,7 +42,7 @@ const solicitarRedefinicaoSenha = async (email) => {
     { expiresIn: "30m" },
   );
 
-  return resetToken;
+  return { resetToken, cuidador };
 };
 
 const redefinirSenha = async (resetToken, novaSenha) => {

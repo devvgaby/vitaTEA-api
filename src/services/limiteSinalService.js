@@ -22,8 +22,8 @@ const criarLimiteSinal = async (
   };
 };
 
-const listarLimitesSinais = async () => {
-  return await LimiteSinal.findAll();
+const listarLimitesSinais = async (idsMonitorados) => {
+  return await LimiteSinal.findAll({ where: { id_monitorado: idsMonitorados } });
 };
 
 const buscarLimiteSinalPorId = async (id_limite_sinal) => {

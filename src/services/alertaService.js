@@ -6,6 +6,7 @@ const {
   LimiteSinal,
 } = require("../models");
 const { LIMITES_PADRAO, FAIXAS_CRITICIDADE } = require("../config/constants");
+const { notificarAlerta } = require("./notificacaoService");
 
 const calcularCriticidade = (valor, valor_min, valor_max) => {
   const amplitude = valor_max - valor_min || 1;
@@ -23,8 +24,6 @@ const calcularCriticidade = (valor, valor_min, valor_max) => {
   return faixa ? faixa.nivel : "critico";
 };
 
-// Avalia uma leitura recém-criada contra os limites do monitorado
-// (personalizados ou padrão) e, se necessário, gera um alerta (RF10/RF11).
 const avaliarLeitura = async (leitura) => {
   const dispositivo = await Dispositivo.findByPk(leitura.id_dispositivo);
   if (!dispositivo) return null;
@@ -45,14 +44,14 @@ const avaliarLeitura = async (leitura) => {
   const valor_max = limite ? Number(limite.valor_max) : padrao?.valor_max;
 
   if (valor_min === undefined || valor_max === undefined) {
-    return null; // não há limite (nem personalizado, nem padrão) para comparar
+    return null; 
   }
 
   const valor = Number(leitura.valor);
   const nivel_criticidade = calcularCriticidade(valor, valor_min, valor_max);
 
   if (!nivel_criticidade) {
-    return null; // dentro da normalidade, nenhum alerta necessário
+    return null; 
   }
 
   const direcao = valor < valor_min ? "abaixo do" : "acima do";
@@ -64,6 +63,12 @@ const avaliarLeitura = async (leitura) => {
     nivel_criticidade,
     data_hora: leitura.data_hora,
   });
+
+  notificarAlerta({
+    alerta,
+    id_monitorado: dispositivo.id_monitorado,
+    nomeSinal: tipoSinal.nome,
+  }).catch((erro) => console.error(`Falha ao notificar alerta: ${erro.message}`));
 
   return alerta;
 };

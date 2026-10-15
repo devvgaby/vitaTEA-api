@@ -1,4 +1,5 @@
 const {
+  ConflitoDispositivoError,
   criarDispositivo,
   listarDispositivos,
   buscarDispositivoPorMonitorado,
@@ -22,13 +23,16 @@ const criar = async (req, res) => {
 
     return res.status(201).json(dispositivo);
   } catch (error) {
+    if (error instanceof ConflitoDispositivoError) {
+      return res.status(409).json({ error: error.message });
+    }
     return res.status(500).json({ error: "Erro ao vincular dispositivo" });
   }
 };
 
 const listar = async (req, res) => {
   try {
-    const dispositivos = await listarDispositivos();
+    const dispositivos = await listarDispositivos(req.idsMonitorados);
     return res.json(dispositivos);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao listar dispositivos" });

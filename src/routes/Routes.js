@@ -11,6 +11,7 @@ const tiposSinaisRouter = require('./tipoSinalRoutes');
 const limitesSinais = require('./limiteSinalRoutes');
 const leiturasDispositivosRouter = require('./leituraDispositivoRoutes');
 const alertasRouter = require('./alertaRoutes');
+const relatoriosRouter = require('./relatorioRoutes');
 
 router.use('/auth', authRouter);
 
@@ -23,5 +24,6 @@ router.use('/tipos-sinais', tiposSinaisRouter);
 router.use('/limites-sinais', limitesSinais);
 router.use('/leituras-dispositivos', leiturasDispositivosRouter);
 router.use('/alertas', alertasRouter);
+router.use('/relatorios', relatoriosRouter);
 
 module.exports = router;

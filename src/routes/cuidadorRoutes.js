@@ -5,15 +5,16 @@ const {
   criar,
   listar,
   buscarPorId,
-  atualizar,
-  deletar,
-} = require("../controllers/CuidadorController");
+  remover,
+} = require("../controllers/CuidadorMonitoradoController");
 const { autenticar } = require("../middlewares/authMiddleware");
+const { carregarAcessos, acessoPorMonitoradoParam } = require("../middlewares/acessoMiddleware");
 
-router.post("/", criar);
-router.get("/", autenticar, listar);
-router.get("/:id", autenticar, buscarPorId);
-router.put("/:id", autenticar, atualizar);
-router.delete("/:id", autenticar, deletar);
+router.use(autenticar);
+
+router.post("/", criar); 
+router.get("/", carregarAcessos, listar);
+router.get("/:id_cuidador/:id_monitorado", acessoPorMonitoradoParam("id_monitorado"), buscarPorId);
+router.delete("/:id_cuidador/:id_monitorado", acessoPorMonitoradoParam("id_monitorado"), remover);
 
 module.exports = router;

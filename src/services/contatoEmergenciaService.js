@@ -22,8 +22,12 @@ const criarContatoEmergencia = async (
   };
 };
 
-const listarContatosEmergencia = async (id_monitorado) => {
-  return await ContatoEmergencia.findAll();
+const listarContatosEmergencia = async (idsMonitorados, id_monitorado) => {
+  const permitidos = id_monitorado
+    ? idsMonitorados.filter((id) => Number(id) === Number(id_monitorado))
+    : idsMonitorados;
+
+  return await ContatoEmergencia.findAll({ where: { id_monitorado: permitidos } });
 };
 
 const buscarContatoEmergenciaPorId = async (id_contato_emergencia) => {

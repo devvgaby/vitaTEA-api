@@ -1,36 +1,34 @@
 const { CuidadorMonitorado } = require("../models");
 
 const criarCuidadorMonitorado = async (id_cuidador, id_monitorado) => {
-  const cuidadorMonitorado = await CuidadorMonitorado.create({
-    id_cuidador,
-    id_monitorado,
+  const existente = await CuidadorMonitorado.findOne({
+    where: { id_cuidador, id_monitorado },
+    paranoid: false,
   });
 
-  return {
-    id_cuidador,
-    id_monitorado,
-  };
+  if (existente) {
+    if (existente.deletedAt) await existente.restore();
+    return { id_cuidador, id_monitorado };
+  }
+
+  await CuidadorMonitorado.create({ id_cuidador, id_monitorado });
+
+  return { id_cuidador, id_monitorado };
 };
 
-const listarCuidadoresMonitorados = async () => {
-  return await CuidadorMonitorado.findAll();
+const listarCuidadoresMonitorados = async (idsMonitorados) => {
+  return await CuidadorMonitorado.findAll({ where: { id_monitorado: idsMonitorados } });
 };
 
 const buscarCuidadorMonitoradoPorId = async (id_cuidador, id_monitorado) => {
   return await CuidadorMonitorado.findOne({
-    where: {
-      id_cuidador,
-      id_monitorado,
-    },
+    where: { id_cuidador, id_monitorado },
   });
 };
 
 const deletarCuidadorMonitoradoPorId = async (id_cuidador, id_monitorado) => {
   const cuidadorMonitorado = await CuidadorMonitorado.findOne({
-    where: {
-      id_cuidador,
-      id_monitorado,
-    },
+    where: { id_cuidador, id_monitorado },
   });
 
   if (!cuidadorMonitorado) return null;

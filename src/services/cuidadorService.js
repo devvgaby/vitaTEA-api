@@ -1,4 +1,4 @@
-const { Cuidador } = require("../models");
+const { Cuidador, CuidadorMonitorado } = require("../models");
 const bcrypt = require("bcrypt");
 
 const criarCuidador = async (nome, email, senha) => {
@@ -55,6 +55,9 @@ const deletarCuidadorPorId = async (id_cuidador) => {
 
   if (!cuidador) return null;
 
+  await CuidadorMonitorado.destroy({ where: { id_cuidador } });
+  cuidador.email = `${cuidador.email}#removido-${cuidador.id_cuidador}`;
+  await cuidador.save();
   await cuidador.destroy();
 
   return true;

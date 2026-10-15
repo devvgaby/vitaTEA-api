@@ -11,9 +11,17 @@ const criar = async (req, res) => {
   try {
     const { id_monitorado, id_tipo_sinal, valor_min, valor_max } = req.body;
 
-    if (!id_monitorado || !id_tipo_sinal || !valor_min || !valor_max) {
+    const vazio = (v) => v === undefined || v === null || v === "";
+
+    if (!id_monitorado || !id_tipo_sinal || vazio(valor_min) || vazio(valor_max)) {
       return res.status(400).json({
         error: "Todos os campos são obrigatórios!",
+      });
+    }
+
+    if (Number(valor_min) >= Number(valor_max)) {
+      return res.status(400).json({
+        error: "O valor mínimo deve ser menor que o máximo",
       });
     }
 
@@ -34,7 +42,7 @@ const criar = async (req, res) => {
 
 const listar = async (req, res) => {
   try {
-    const limitesSinais = await listarLimitesSinais();
+    const limitesSinais = await listarLimitesSinais(req.idsMonitorados);
 
     return res.status(200).json(limitesSinais);
   } catch (error) {

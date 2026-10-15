@@ -18,6 +18,10 @@ const criar = async (req, res) => {
         .json({ error: "id_tipo_sinal, valor e data_hora são obrigatórios" });
     }
 
+    if (!Number.isFinite(Number(valor))) {
+      return res.status(400).json({ error: "valor deve ser numérico" });
+    }
+
     const { leitura, alerta } = await criarLeituraDispositivo(
       id_dispositivo,
       id_tipo_sinal,
@@ -48,7 +52,7 @@ const buscarPorId = async (req, res) => {
 
 const listar = async (req, res) => {
   try {
-    const leituras = await listarLeiturasDispositivos();
+    const leituras = await listarLeiturasDispositivos(req.idsMonitorados);
     return res.status(200).json(leituras);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao listar leituras" });
@@ -58,7 +62,8 @@ const listar = async (req, res) => {
 const buscarPorDispositivo = async (req, res) => {
   try {
     const { id_dispositivo } = req.params;
-    const leituras = await buscarLeiturasDispositivoPorDispositivo(id_dispositivo);
+    const { desde, limite } = req.query;
+    const leituras = await buscarLeiturasDispositivoPorDispositivo(id_dispositivo, { desde, limite });
     return res.status(200).json(leituras);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar leituras do dispositivo" });

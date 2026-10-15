@@ -34,7 +34,10 @@ const criar = async (req, res) => {
 
 const listar = async (req, res) => {
   try {
-    const contatos = await listarContatosEmergencia();
+    const contatos = await listarContatosEmergencia(
+      req.idsMonitorados,
+      req.query.id_monitorado,
+    );
     return res.status(200).json(contatos);
   } catch (error) {
     return res.status(500).json({
