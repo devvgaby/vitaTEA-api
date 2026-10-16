@@ -147,29 +147,40 @@ const urlPublicaDoBackend = () => {
 const montarLinkRedefinicao = (resetToken) =>
   `${urlPublicaDoBackend()}/auth/redefinir-senha?token=${encodeURIComponent(resetToken)}`;
 
-const enviarEmailRedefinicaoSenha = async ({ para, nome, resetToken }) => {
-  // Falha antes de tentar enviar se o SMTP ou a URL pública estiverem errados.
+// O código de 6 dígitos é o principal (digitado no app). O link para a página
+// web é um caminho alternativo e só entra se API_PUBLIC_URL/APP_URL for válido.
+const enviarEmailRedefinicaoSenha = async ({ para, nome, codigo, resetToken }) => {
   if (!smtpConfigurado()) throw new SmtpNaoConfiguradoError();
-  const link = montarLinkRedefinicao(resetToken);
+
+  let link = null;
+  try {
+    link = montarLinkRedefinicao(resetToken);
+  } catch {
+    link = null;
+  }
 
   const texto = [
     `Olá, ${nome}!`,
     "",
     "Recebemos um pedido para redefinir a senha da sua conta no VitaTEA.",
-    "Para criar uma nova senha, abra o link abaixo (válido por 30 minutos e de uso único):",
-    link,
+    "Digite este código no aplicativo (válido por 15 minutos):",
     "",
+    `    ${codigo}`,
+    "",
+    ...(link ? ["Se preferir, crie a nova senha pelo navegador:", link, ""] : []),
     "Se você não fez esse pedido, ignore esta mensagem: sua senha continua a mesma.",
   ].join("\n");
 
   const html = `
     <p>Olá, ${escaparHtml(nome)}!</p>
     <p>Recebemos um pedido para redefinir a senha da sua conta no VitaTEA.</p>
-    <p><a href="${escaparHtml(link)}">Criar uma nova senha</a></p>
-    <p>O link vale por 30 minutos e só pode ser usado uma vez.</p>
+    <p>Digite este código no aplicativo:</p>
+    <p style="font-size:28px;font-weight:bold;letter-spacing:6px;font-family:monospace">${escaparHtml(codigo)}</p>
+    <p>O código vale por 15 minutos e só pode ser usado uma vez.</p>
+    ${link ? `<p>Se preferir, <a href="${escaparHtml(link)}">crie a nova senha pelo navegador</a>.</p>` : ""}
     <p>Se você não fez esse pedido, ignore esta mensagem: sua senha continua a mesma.</p>`;
 
-  return enviarEmail({ para, assunto: "VitaTEA - redefinição de senha", texto, html });
+  return enviarEmail({ para, assunto: "VitaTEA - código de redefinição de senha", texto, html });
 };
 
 // Usado na inicialização do servidor: diz, sem expor segredos, se o envio vai funcionar.

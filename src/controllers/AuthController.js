@@ -3,6 +3,7 @@ const {
   solicitarRedefinicaoSenha,
   buscarCuidadorPorResetToken,
   redefinirSenha,
+  redefinirSenhaComCodigo,
 } = require("../services/authService");
 const {
   enviarEmailRedefinicaoSenha,
@@ -33,15 +34,16 @@ const login = async (req, res) => {
 };
 
 const MENSAGEM_ESQUECI_SENHA =
-  "Se o e-mail estiver cadastrado, enviamos um link de redefinição para ele. Confira também a caixa de spam.";
+  "Se o e-mail estiver cadastrado, enviamos um código de redefinição para ele. Confira também a caixa de spam.";
 
 // Envia o e-mail em segundo plano: assim a resposta demora o mesmo tempo exista
 // o e-mail ou não, e um SMTP lento não deixa o aplicativo esperando.
 // Nada que contenha o token (link, código) é registrado em log.
-const enviarLinkEmSegundoPlano = ({ cuidador, resetToken }) => {
+const enviarLinkEmSegundoPlano = ({ cuidador, codigo, resetToken }) => {
   enviarEmailRedefinicaoSenha({
     para: cuidador.email,
     nome: cuidador.nome,
+    codigo,
     resetToken,
   })
     .then(() => {
@@ -74,6 +76,40 @@ const esqueciSenha = async (req, res) => {
     return res.status(200).json({ message: MENSAGEM_ESQUECI_SENHA });
   } catch (error) {
     return res.status(500).json({ error: "Erro ao solicitar redefinição de senha" });
+  }
+};
+
+// Redefinição pelo app com o código de 6 dígitos recebido por e-mail.
+const redefinirSenhaApp = async (req, res) => {
+  try {
+    const { email, codigo, novaSenha } = req.body || {};
+    const emailLimpo = typeof email === "string" ? email.trim() : "";
+    const codigoLimpo = typeof codigo === "string" ? codigo.replace(/\s/g, "") : "";
+
+    if (!emailLimpo || !codigoLimpo || !novaSenha) {
+      return res.status(400).json({ error: "E-mail, código e nova senha são obrigatórios" });
+    }
+
+    if (typeof novaSenha !== "string" || novaSenha.length < TAMANHO_MINIMO_SENHA) {
+      return res
+        .status(400)
+        .json({ error: `A senha deve ter pelo menos ${TAMANHO_MINIMO_SENHA} caracteres` });
+    }
+
+    const resultado = await redefinirSenhaComCodigo(emailLimpo, codigoLimpo, novaSenha);
+
+    if (resultado === "bloqueado") {
+      return res
+        .status(429)
+        .json({ error: "Muitas tentativas com código errado. Aguarde 15 minutos e solicite um novo código." });
+    }
+    if (resultado !== "ok") {
+      return res.status(400).json({ error: "Código inválido ou expirado" });
+    }
+
+    return res.status(200).json({ message: "Senha redefinida com sucesso" });
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao redefinir a senha" });
   }
 };
 
@@ -151,6 +187,7 @@ const redefinirSenhaWeb = async (req, res) => {
 module.exports = {
   login,
   esqueciSenha,
+  redefinirSenhaApp,
   paginaRedefinirSenha,
   redefinirSenhaWeb,
 };

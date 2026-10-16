@@ -1,11 +1,56 @@
+const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { Cuidador } = require("../models");
 
 const VALIDADE_TOKEN_RESET = "30m";
 
+// Código de 6 dígitos enviado por e-mail e digitado no app.
+// É derivado (HMAC) do segredo do reset, que inclui o hash da senha atual:
+// não precisa ser guardado no banco e deixa de valer assim que a senha muda.
+// Vale na janela atual e na anterior (15 a 30 minutos).
+const JANELA_CODIGO_MS = 15 * 60 * 1000;
+const MAX_TENTATIVAS_CODIGO = 5;
+const tentativasCodigo = new Map(); // id_cuidador -> { falhas, expiraEm }
+
 const segredoDoReset = (cuidador) =>
   `${process.env.JWT_SECRET}:reset-senha:${cuidador.senha}`;
+
+const gerarCodigo = (cuidador, janela) => {
+  const hmac = crypto
+    .createHmac("sha256", segredoDoReset(cuidador))
+    .update(`codigo:${cuidador.id_cuidador}:${janela}`)
+    .digest();
+  return String(hmac.readUInt32BE(0) % 1000000).padStart(6, "0");
+};
+
+const janelaAtual = () => Math.floor(Date.now() / JANELA_CODIGO_MS);
+
+const codigoConfere = (cuidador, codigo) => {
+  const agora = janelaAtual();
+  return [agora, agora - 1].some((janela) =>
+    crypto.timingSafeEqual(Buffer.from(gerarCodigo(cuidador, janela)), Buffer.from(codigo)),
+  );
+};
+
+const bloqueadoPorTentativas = (id) => {
+  const registro = tentativasCodigo.get(id);
+  if (!registro) return false;
+  if (registro.expiraEm < Date.now()) {
+    tentativasCodigo.delete(id);
+    return false;
+  }
+  return registro.falhas >= MAX_TENTATIVAS_CODIGO;
+};
+
+const registrarFalha = (id) => {
+  const registro = tentativasCodigo.get(id);
+  if (registro && registro.expiraEm >= Date.now()) {
+    registro.falhas += 1;
+  } else {
+    tentativasCodigo.set(id, { falhas: 1, expiraEm: Date.now() + JANELA_CODIGO_MS });
+  }
+};
 
 const login = async (email, senha) => {
   const cuidador = await Cuidador.findOne({ where: { email } });
@@ -47,7 +92,11 @@ const solicitarRedefinicaoSenha = async (email) => {
     { expiresIn: VALIDADE_TOKEN_RESET },
   );
 
-  return { resetToken, cuidador };
+  // Não zera as tentativas aqui: o código é o mesmo dentro da janela, então
+  // pedir de novo não pode liberar mais chutes.
+  const codigo = gerarCodigo(cuidador, janelaAtual());
+
+  return { resetToken, codigo, cuidador };
 };
 
 // Devolve o cuidador dono do token, ou null se o token for inválido,
@@ -88,9 +137,36 @@ const redefinirSenha = async (resetToken, novaSenha) => {
   return alterados === 1;
 };
 
+// Redefinição pelo app: e-mail + código de 6 dígitos.
+// Devolve "ok", "invalido" ou "bloqueado" (tentativas demais).
+const redefinirSenhaComCodigo = async (email, codigo, novaSenha) => {
+  if (typeof codigo !== "string" || !/^\d{6}$/.test(codigo)) return "invalido";
+
+  const cuidador = await Cuidador.findOne({ where: { email } });
+  if (!cuidador) return "invalido";
+
+  if (bloqueadoPorTentativas(cuidador.id_cuidador)) return "bloqueado";
+
+  if (!codigoConfere(cuidador, codigo)) {
+    registrarFalha(cuidador.id_cuidador);
+    return "invalido";
+  }
+
+  const novoHash = await bcrypt.hash(novaSenha, 10);
+  const [alterados] = await Cuidador.update(
+    { senha: novoHash },
+    { where: { id_cuidador: cuidador.id_cuidador, senha: cuidador.senha } },
+  );
+  if (alterados !== 1) return "invalido";
+
+  tentativasCodigo.delete(cuidador.id_cuidador);
+  return "ok";
+};
+
 module.exports = {
   login,
   solicitarRedefinicaoSenha,
   buscarCuidadorPorResetToken,
   redefinirSenha,
+  redefinirSenhaComCodigo,
 };
