@@ -2,6 +2,11 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { Cuidador } = require("../models");
 
+const VALIDADE_TOKEN_RESET = "30m";
+
+const segredoDoReset = (cuidador) =>
+  `${process.env.JWT_SECRET}:reset-senha:${cuidador.senha}`;
+
 const login = async (email, senha) => {
   const cuidador = await Cuidador.findOne({ where: { email } });
 
@@ -38,29 +43,54 @@ const solicitarRedefinicaoSenha = async (email) => {
 
   const resetToken = jwt.sign(
     { id_cuidador: cuidador.id_cuidador, tipo: "reset_senha" },
-    process.env.JWT_SECRET,
-    { expiresIn: "30m" },
+    segredoDoReset(cuidador),
+    { expiresIn: VALIDADE_TOKEN_RESET },
   );
 
   return { resetToken, cuidador };
 };
 
-const redefinirSenha = async (resetToken, novaSenha) => {
-  let payload;
+// Devolve o cuidador dono do token, ou null se o token for inválido,
+// estiver expirado ou já tiver sido usado.
+const buscarCuidadorPorResetToken = async (resetToken) => {
+  if (typeof resetToken !== "string" || !resetToken) return null;
+
+  // decode (sem verificar) só para descobrir de quem é o token;
+  // a verificação de verdade da assinatura acontece logo abaixo.
+  const conteudo = jwt.decode(resetToken);
+  if (!conteudo || conteudo.tipo !== "reset_senha" || !conteudo.id_cuidador) return null;
+
+  const cuidador = await Cuidador.findByPk(conteudo.id_cuidador);
+  if (!cuidador) return null;
+
   try {
-    payload = jwt.verify(resetToken, process.env.JWT_SECRET);
+    jwt.verify(resetToken, segredoDoReset(cuidador), { algorithms: ["HS256"] });
   } catch (error) {
-    return false;
+    return null;
   }
 
-  if (payload.tipo !== "reset_senha") return false;
-
-  const cuidador = await Cuidador.findByPk(payload.id_cuidador);
-  if (!cuidador) return false;
-
-  cuidador.senha = await bcrypt.hash(novaSenha, 10);
-  await cuidador.save();
-  return true;
+  return cuidador;
 };
 
-module.exports = { login, solicitarRedefinicaoSenha, redefinirSenha };
+const redefinirSenha = async (resetToken, novaSenha) => {
+  const cuidador = await buscarCuidadorPorResetToken(resetToken);
+  if (!cuidador) return false;
+
+  const novoHash = await bcrypt.hash(novaSenha, 10);
+
+  // Atualiza só se a senha ainda for a mesma de quando o token foi validado.
+  // Se dois pedidos com o mesmo token chegarem juntos, apenas um consegue.
+  const [alterados] = await Cuidador.update(
+    { senha: novoHash },
+    { where: { id_cuidador: cuidador.id_cuidador, senha: cuidador.senha } },
+  );
+
+  return alterados === 1;
+};
+
+module.exports = {
+  login,
+  solicitarRedefinicaoSenha,
+  buscarCuidadorPorResetToken,
+  redefinirSenha,
+};
