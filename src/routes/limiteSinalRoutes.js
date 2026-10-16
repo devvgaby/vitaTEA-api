@@ -3,26 +3,27 @@ const router = Router();
 
 const {
   criar,
-  buscarPorId,
   listar,
-  buscarPorDispositivo,
+  buscarPorId,
+  buscarPorMonitorado,
   atualizar,
   deletar,
-} = require("../controllers/LeituraDispositivoController");
-const { autenticarDispositivo } = require("../middlewares/deviceAuthMiddleware");
+} = require("../controllers/LimiteSinalController");
 const { autenticar } = require("../middlewares/authMiddleware");
 const {
   carregarAcessos,
-  acessoPorLeitura,
-  acessoPorDispositivo,
+  acessoPorMonitoradoCorpo,
+  acessoPorMonitoradoParam,
+  acessoPorLimite,
 } = require("../middlewares/middlewareAcess");
 
-router.post("/", autenticarDispositivo, criar);
+router.use(autenticar);
 
-router.get("/", autenticar, carregarAcessos, listar);
-router.get("/dispositivo/:id_dispositivo", autenticar, acessoPorDispositivo("id_dispositivo"), buscarPorDispositivo);
-router.get("/:id_leitura_dispositivo", autenticar, acessoPorLeitura("id_leitura_dispositivo"), buscarPorId);
-router.put("/:id_leitura_dispositivo", autenticar, acessoPorLeitura("id_leitura_dispositivo"), atualizar);
-router.delete("/:id_leitura_dispositivo", autenticar, acessoPorLeitura("id_leitura_dispositivo"), deletar);
+router.post("/", acessoPorMonitoradoCorpo("id_monitorado"), criar);
+router.get("/", carregarAcessos, listar);
+router.get("/:id_limite_sinal/:id_monitorado", acessoPorMonitoradoParam("id_monitorado"), buscarPorMonitorado);
+router.get("/:id", acessoPorLimite("id"), buscarPorId);
+router.put("/:id", acessoPorLimite("id"), atualizar);
+router.delete("/:id", acessoPorLimite("id"), deletar);
 
 module.exports = router;

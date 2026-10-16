@@ -2,19 +2,25 @@ const { Router } = require("express");
 const router = Router();
 
 const {
-  listarPorMonitorado,
+  criar,
+  listar,
   buscarPorId,
-  marcarVisualizado,
+  atualizar,
   deletar,
-} = require("../controllers/AlertaController");
+} = require("../controllers/ContatoEmergenciaController");
 const { autenticar } = require("../middlewares/authMiddleware");
-const { acessoPorMonitoradoParam, acessoPorAlerta } = require("../middlewares/middlewareAcess");
+const {
+  carregarAcessos,
+  acessoPorMonitoradoCorpo,
+  acessoPorContato,
+} = require("../middlewares/middlewareAcess");
 
 router.use(autenticar);
 
-router.get("/monitorado/:id_monitorado", acessoPorMonitoradoParam("id_monitorado"), listarPorMonitorado);
-router.get("/:id_alerta", acessoPorAlerta("id_alerta"), buscarPorId);
-router.patch("/:id_alerta/visualizar", acessoPorAlerta("id_alerta"), marcarVisualizado);
-router.delete("/:id_alerta", acessoPorAlerta("id_alerta"), deletar);
+router.post("/", acessoPorMonitoradoCorpo("id_monitorado"), criar);
+router.get("/", carregarAcessos, listar);
+router.get("/:id", acessoPorContato("id"), buscarPorId);
+router.put("/:id", acessoPorContato("id"), atualizar);
+router.delete("/:id", acessoPorContato("id"), deletar);
 
 module.exports = router;

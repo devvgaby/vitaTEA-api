@@ -6,7 +6,6 @@ const {
 } = require("../services/authService");
 const {
   enviarEmailRedefinicaoSenha,
-  smtpConfigurado,
   explicarErroSmtp,
 } = require("../services/emailService");
 const paginas = require("../views/paginaRedefinirSenha");
@@ -33,9 +32,33 @@ const login = async (req, res) => {
   }
 };
 
+const MENSAGEM_ESQUECI_SENHA =
+  "Se o e-mail estiver cadastrado, enviamos um link de redefinição para ele. Confira também a caixa de spam.";
+
+// Envia o e-mail em segundo plano: assim a resposta demora o mesmo tempo exista
+// o e-mail ou não, e um SMTP lento não deixa o aplicativo esperando.
+// Nada que contenha o token (link, código) é registrado em log.
+const enviarLinkEmSegundoPlano = ({ cuidador, resetToken }) => {
+  enviarEmailRedefinicaoSenha({
+    para: cuidador.email,
+    nome: cuidador.nome,
+    resetToken,
+  })
+    .then(() => {
+      console.log(`[redefinição de senha] e-mail enviado pelo SMTP (cuidador ${cuidador.id_cuidador})`);
+    })
+    .catch((erro) => {
+      console.error(
+        `[redefinição de senha] FALHA ao enviar e-mail (cuidador ${cuidador.id_cuidador}): ${erro.code || erro.name}: ${erro.message}`,
+      );
+      const dica = explicarErroSmtp(erro);
+      if (dica) console.error(`  -> ${dica}`);
+    });
+};
+
 const esqueciSenha = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
 
     if (!email) {
       return res.status(400).json({ error: "E-mail é obrigatório" });
@@ -43,67 +66,14 @@ const esqueciSenha = async (req, res) => {
 
     const resultado = await solicitarRedefinicaoSenha(email);
 
-    let resetToken;
     if (resultado) {
-      try {
-        const envio = await enviarEmailRedefinicaoSenha({
-          para: resultado.cuidador.email,
-          nome: resultado.cuidador.nome,
-          resetToken: resultado.resetToken,
-        });
-        console.log(
-          envio.simulado
-            ? `[redefinição de senha] SIMULADO (SMTP_HOST vazio): nenhum e-mail real foi enviado para ${resultado.cuidador.email}`
-            : `[redefinição de senha] e-mail ENVIADO pelo SMTP para ${resultado.cuidador.email}`,
-        );
-      } catch (erro) {
-        console.error(
-          `[redefinição de senha] FALHA ao enviar e-mail para ${resultado.cuidador.email}: ${erro.message}`,
-        );
-        const dica = explicarErroSmtp(erro);
-        if (dica) console.error(`  -> ${dica}`);
-      }
-
-      // Só em desenvolvimento e sem SMTP a API devolve o código na resposta.
-      if (!smtpConfigurado() && process.env.NODE_ENV !== "production") {
-        resetToken = resultado.resetToken;
-      }
+      enviarLinkEmSegundoPlano(resultado);
     }
 
-    // A resposta é sempre a mesma, exista o e-mail ou não (não revela quem tem conta).
-    return res.status(200).json({
-      message: "Se o e-mail estiver cadastrado, enviamos as instruções de redefinição.",
-      resetToken,
-    });
+    // A resposta é sempre a mesma, exista o e-mail ou não, e NUNCA contém o token.
+    return res.status(200).json({ message: MENSAGEM_ESQUECI_SENHA });
   } catch (error) {
     return res.status(500).json({ error: "Erro ao solicitar redefinição de senha" });
-  }
-};
-
-// Usado pelo aplicativo (envia JSON).
-const redefinirSenhaController = async (req, res) => {
-  try {
-    const { resetToken, novaSenha } = req.body;
-
-    if (!resetToken || !novaSenha) {
-      return res.status(400).json({ error: "resetToken e novaSenha são obrigatórios" });
-    }
-
-    if (String(novaSenha).length < TAMANHO_MINIMO_SENHA) {
-      return res
-        .status(400)
-        .json({ error: `A senha deve ter pelo menos ${TAMANHO_MINIMO_SENHA} caracteres` });
-    }
-
-    const sucesso = await redefinirSenha(resetToken, novaSenha);
-
-    if (!sucesso) {
-      return res.status(400).json({ error: "Token inválido ou expirado" });
-    }
-
-    return res.status(200).json({ message: "Senha redefinida com sucesso" });
-  } catch (error) {
-    return res.status(500).json({ error: "Erro ao redefinir senha" });
   }
 };
 
@@ -181,7 +151,6 @@ const redefinirSenhaWeb = async (req, res) => {
 module.exports = {
   login,
   esqueciSenha,
-  redefinirSenhaController,
   paginaRedefinirSenha,
   redefinirSenhaWeb,
 };

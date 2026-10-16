@@ -1,22 +1,13 @@
 const { Router } = require("express");
 const router = Router();
 
-const {
-  criar,
-  listar,
-  buscarPorId,
-  atualizar,
-  deletar,
-} = require("../controllers/MonitoradoController");
+const { resumo, csv } = require("../controllers/RelatorioController");
 const { autenticar } = require("../middlewares/authMiddleware");
-const { carregarAcessos, acessoPorMonitoradoParam } = require("../middlewares/middlewareAcess");
+const { acessoPorMonitoradoParam } = require("../middlewares/middlewareAcess");
 
 router.use(autenticar);
 
-router.post("/", criar);
-router.get("/", carregarAcessos, listar);
-router.get("/:id", acessoPorMonitoradoParam("id"), buscarPorId);
-router.put("/:id", acessoPorMonitoradoParam("id"), atualizar);
-router.delete("/:id", acessoPorMonitoradoParam("id"), deletar);
+router.get("/monitorado/:id_monitorado", acessoPorMonitoradoParam("id_monitorado"), resumo);
+router.get("/monitorado/:id_monitorado/csv", acessoPorMonitoradoParam("id_monitorado"), csv);
 
 module.exports = router;

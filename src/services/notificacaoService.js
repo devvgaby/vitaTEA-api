@@ -11,9 +11,12 @@ const { enviarEmail } = require("./emailService");
 //
 // Quando uma leitura gera um alerta de nível "alto" ou "crítico":
 //  1. os cuidadores vinculados ao monitorado recebem um e-mail;
-//  2. se o Twilio estiver configurado (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
-//     TWILIO_FROM), os contatos de emergência recebem um SMS nos alertas
-//     críticos. Sem as chaves, essa etapa é simplesmente ignorada.
+//  2. nos alertas críticos, os contatos de emergência recebem um SMS:
+//     - com o Twilio configurado (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
+//       TWILIO_FROM), o SMS é enviado de verdade;
+//     - sem o Twilio, com SMS_MODO=terminal, o SMS é apenas IMPRESSO no terminal
+//       do servidor (demonstração, nenhuma mensagem real é enviada);
+//     - sem nenhum dos dois, essa etapa é ignorada.
 // Falhas no envio nunca interrompem o registro da leitura: apenas vão para o log.
 
 const NIVEIS_QUE_NOTIFICAM = ["alto", "critico"];
@@ -38,6 +41,27 @@ const twilioConfigurado = () =>
       process.env.TWILIO_AUTH_TOKEN &&
       process.env.TWILIO_FROM,
   );
+
+const smsNoTerminal = () => String(process.env.SMS_MODO || "").toLowerCase() === "terminal";
+
+const mascararTelefone = (telefone) => {
+  const t = String(telefone);
+  return t.length <= 4 ? t : `${t.slice(0, 3)}${"*".repeat(t.length - 7)}${t.slice(-4)}`;
+};
+
+// Demonstração: mostra no terminal o SMS que seria enviado. Não envia nada.
+const enviarSmsNoTerminal = (contato, telefone, texto) => {
+  console.log(
+    [
+      "",
+      "┌─────────────── SMS DE EMERGÊNCIA (simulado no terminal) ───────────────",
+      `│ Para: ${contato.nome} (${mascararTelefone(telefone)})`,
+      `│ Texto: ${texto}`,
+      "└─────────────────────────────────────────────────────────────────────────",
+      "",
+    ].join("\n"),
+  );
+};
 
 const normalizarTelefone = (telefone) => {
   const digitos = String(telefone || "").replace(/\D/g, "");
@@ -95,7 +119,8 @@ const notificarAlerta = async ({ alerta, id_monitorado, nomeSinal }) => {
     ),
   );
 
-  if (alerta.nivel_criticidade === NIVEL_SMS && twilioConfigurado()) {
+  const usaTwilio = twilioConfigurado();
+  if (alerta.nivel_criticidade === NIVEL_SMS && (usaTwilio || smsNoTerminal())) {
     const contatos = await ContatoEmergencia.findAll({ where: { id_monitorado } });
     const sms = `VitaTEA: ${monitorado.nome} - alerta ${nivel}. ${alerta.mensagem}`;
 
@@ -104,7 +129,8 @@ const notificarAlerta = async ({ alerta, id_monitorado, nomeSinal }) => {
         const telefone = normalizarTelefone(contato.telefone);
         if (!telefone) return;
         try {
-          await enviarSms(telefone, sms);
+          if (usaTwilio) await enviarSms(telefone, sms);
+          else enviarSmsNoTerminal(contato, telefone, sms);
         } catch (erro) {
           console.error(`Falha ao enviar SMS para ${contato.nome}: ${erro.message}`);
         }

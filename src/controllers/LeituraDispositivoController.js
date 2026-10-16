@@ -31,6 +31,7 @@ const criar = async (req, res) => {
 
     return res.status(201).json({ leitura, alerta });
   } catch (error) {
+    console.error("[leitura] erro ao registrar leitura:", error);
     return res.status(500).json({ error: "Erro ao registrar leitura do dispositivo" });
   }
 };

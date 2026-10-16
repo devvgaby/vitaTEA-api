@@ -5,25 +5,18 @@ const {
   criar,
   listar,
   buscarPorId,
-  buscarPorMonitorado,
   atualizar,
   deletar,
-} = require("../controllers/LimiteSinalController");
+} = require("../controllers/MonitoradoController");
 const { autenticar } = require("../middlewares/authMiddleware");
-const {
-  carregarAcessos,
-  acessoPorMonitoradoCorpo,
-  acessoPorMonitoradoParam,
-  acessoPorLimite,
-} = require("../middlewares/middlewareAcess");
+const { carregarAcessos, acessoPorMonitoradoParam } = require("../middlewares/middlewareAcess");
 
 router.use(autenticar);
 
-router.post("/", acessoPorMonitoradoCorpo("id_monitorado"), criar);
+router.post("/", criar);
 router.get("/", carregarAcessos, listar);
-router.get("/:id_limite_sinal/:id_monitorado", acessoPorMonitoradoParam("id_monitorado"), buscarPorMonitorado);
-router.get("/:id", acessoPorLimite("id"), buscarPorId);
-router.put("/:id", acessoPorLimite("id"), atualizar);
-router.delete("/:id", acessoPorLimite("id"), deletar);
+router.get("/:id", acessoPorMonitoradoParam("id"), buscarPorId);
+router.put("/:id", acessoPorMonitoradoParam("id"), atualizar);
+router.delete("/:id", acessoPorMonitoradoParam("id"), deletar);
 
 module.exports = router;
